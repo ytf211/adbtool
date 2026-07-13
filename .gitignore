@@ -1,0 +1,10 @@
+build/
+dist/
+tools/android.jar
+tools/d8.jar
+.claude/
+.idea/
+.vscode/
+*.iml
+*.class
+.DS_Store

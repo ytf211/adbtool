@@ -1,0 +1,6 @@
+#!/system/bin/sh
+# adbtool —— 设备端包装脚本(放在 /data/local/tmp/adbtool)
+# 让 app_process 以固定入口运行 adbtool.jar。
+# 用法: adbtool <set-clip|get-clip|toast|notify|help> [参数]
+export CLASSPATH=/data/local/tmp/adbtool.jar
+exec app_process /system/bin com.adbtool.AdbTool "$@"
