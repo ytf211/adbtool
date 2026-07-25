@@ -1,0 +1,6 @@
+[tools]
+java = "temurin-21.0.11+10.0.LTS"
+
+[tasks.check]
+description = "Run all local verification"
+run = "./gradlew clean check assemble && shellcheck bin/adbtool build.sh device/adbtool install.sh scripts/check-conventions.sh tests/shell/fake-adb tests/shell/run.sh tools/fetch-tools.sh"

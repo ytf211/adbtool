@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+: "${ADB_LOG:?ADB_LOG is required}"
+count_file="$ADB_LOG.count"
+count=0
+if [[ -f "$count_file" ]]; then
+  read -r count <"$count_file"
+fi
+count=$((count + 1))
+printf '%s\n' "$count" >"$count_file"
+printf '%s\0' "$@" >"$ADB_LOG.$count"
+printf '%s\0' "$@" >"$ADB_LOG"
+
+arguments=("$@")
+command_index=0
+if [[ "${arguments[0]-}" == "-s" ]]; then
+  command_index=2
+fi
+command="${arguments[$command_index]-}"
+
+case "$command" in
+  devices)
+    printf 'List of devices attached\n%s\tdevice\n' "${FAKE_ADB_SERIAL:-device}"
+    ;;
+  connect)
+    printf 'connected\n'
+    ;;
+esac

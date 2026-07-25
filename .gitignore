@@ -1,8 +1,7 @@
+.gradle/
+.pi-subagents/
 build/
-dist/
-tools/android.jar
-tools/d8.jar
-.claude/
+.mise.local.toml
 .idea/
 .vscode/
 *.iml

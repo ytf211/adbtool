@@ -1,33 +1,35 @@
 #!/usr/bin/env bash
-# adbtool —— 主机端包装脚本(在开发机上运行,经 adb 转发到设备)
-#
-# 用法:
-#   adbtool set-clip "要设置的文本"
-#   adbtool get-clip
-#   adbtool toast [-l] "土司文本"
-#   adbtool notify "标题" "正文"
-#
-# 环境变量:
-#   ADBTOOL_SERIAL   目标设备序列号/地址(留空则使用当前唯一连接的设备)
-#   ADB              adb 可执行文件路径(默认 adb)
+# Host-side wrapper that forwards adbtool arguments to the Android device.
 set -euo pipefail
 
 ADB="${ADB:-adb}"
 SERIAL="${ADBTOOL_SERIAL:-}"
 REMOTE_JAR="/data/local/tmp/adbtool.jar"
 
-# 指定了网络地址且尚未连接时,尝试自动连接。
-if [[ -n "$SERIAL" && "$SERIAL" == *:* ]]; then
-  if ! "$ADB" devices | grep -q "^$SERIAL[[:space:]]*device$"; then
-    "$ADB" connect "$SERIAL" >/dev/null 2>&1 || true
-  fi
+is_connected() {
+  local device state rest
+  while read -r device state rest; do
+    if [[ "$device" == "$SERIAL" && "$state" == "device" ]]; then
+      return 0
+    fi
+  done < <("$ADB" devices)
+  return 1
+}
+
+if [[ -n "$SERIAL" && "$SERIAL" == *:* ]] && ! is_connected; then
+  "$ADB" connect "$SERIAL" >/dev/null
 fi
 
-# 逐个参数做单引号转义,保证含空格/中文的文本原样送达设备端。
+quote_remote_argument() {
+  local value="$1"
+  value=${value//\'/\'\\\'\'}
+  printf -v REPLY "'%s'" "$value"
+}
+
 remote="CLASSPATH=$REMOTE_JAR app_process /system/bin com.adbtool.AdbTool"
-for a in "$@"; do
-  esc=$(printf "%s" "$a" | sed "s/'/'\\\\''/g")
-  remote="$remote '$esc'"
+for argument in "$@"; do
+  quote_remote_argument "$argument"
+  remote+=" $REPLY"
 done
 
 if [[ -n "$SERIAL" ]]; then
